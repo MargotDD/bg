@@ -96,6 +96,9 @@ begin
   return result;
 end; $$;
 
+-- PostgREST/RPC permissions (safe to run repeatedly).
+grant execute on function public.create_company_invite(text,jsonb,jsonb) to authenticated;
+
 create or replace function public.accept_company_invite(p_token text)
 returns jsonb language plpgsql security definer set search_path=public as $$
 declare inv public.company_invites%rowtype; st jsonb; p jsonb;
@@ -120,6 +123,8 @@ begin
   on conflict(user_id) do update set state=excluded.state,updated_at=now();
   return jsonb_build_object('state',st);
 end; $$;
+
+grant execute on function public.accept_company_invite(text) to authenticated;
 
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path=public as $$

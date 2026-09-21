@@ -132,6 +132,11 @@ const AuthGate: React.FC = () => {
     finally { setBusy(false); }
   };
 
+  // Do not mount the main application until authentication is complete.
+  // Several workspace views assume an authenticated account; mounting them
+  // beside the login screen could crash React and leave a completely blank page.
+  if (loggedIn) return <MainLayout />;
+
   return (
     <div className="fixed inset-0 z-[9999] flex min-h-screen items-center justify-center overflow-auto bg-[linear-gradient(135deg,#fff8fc_0%,#ffe6f4_52%,#ffc4f5_100%)] p-5">
       <div className="relative w-full max-w-[430px] overflow-hidden rounded-[30px] border border-pink-200/60 bg-white/95 p-7 shadow-[0_25px_70px_rgba(196,76,145,0.20)] sm:p-9">

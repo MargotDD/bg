@@ -211,7 +211,9 @@ export async function api(path:string, options:RequestInit={}) {
         })
       });
     }
-    const result = await rpc('create_company_invite', {p_company_id:company.id, p_company:company, p_company_state:extractCompanyStateFromStored(company.id)});
+    const rawResult = await rpc('create_company_invite', {p_company_id:company.id, p_company, p_company_state:await extractCompanyStateFromStored(company.id)});
+    const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
+    if (!result?.code) throw new Error('Supabase did not return a valid invitation code. Apply the latest supabase/schema.sql.');
     return {code:result.code,link:`${window.location.origin}/?invite=${result.code}`,expiresAt:result.expires_at};
   }
   if (inviteMatch && inviteMatch[1] && !inviteMatch[2] && method === 'GET') {
@@ -220,8 +222,9 @@ export async function api(path:string, options:RequestInit={}) {
     return {company:inv.company,expiresAt:new Date(inv.expires_at).getTime()};
   }
   if (inviteMatch && inviteMatch[1] && inviteMatch[2] === 'accept' && method === 'POST') {
-    const result = await rpc('accept_company_invite', {p_token:inviteMatch[1]});
-    return {ok:true,state:result.state};
+    const rawResult = await rpc('accept_company_invite', {p_token:inviteMatch[1]});
+    const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
+    return {ok:true,state:result?.state};
   }
   throw new Error(`Unsupported API endpoint: ${path}`);
 }

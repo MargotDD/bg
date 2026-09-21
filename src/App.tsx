@@ -292,7 +292,6 @@ const MainLayout: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <MainLayout />
       <AuthGate />
     </AppProvider>
   );

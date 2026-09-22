@@ -1,5 +1,39 @@
 export type UserRole = 'Owner' | 'Admin' | 'Manager' | 'Member';
 
+export interface CompanyMember {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl: string;
+  role: UserRole;
+  customRole: string;
+  rank: number;
+  fakeAdmin: boolean;
+  permissions: UserPermission;
+}
+
+export interface CompanyActionRequest {
+  id: string;
+  companyId: string;
+  targetUserId: string;
+  requestedBy: string;
+  requestedByName: string;
+  targetName: string;
+  type: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CompanyUserAlert {
+  id: string;
+  companyId: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface UserPermission {
   create_edit_delete_products?: boolean;
   make_sales?: boolean;
@@ -387,7 +421,7 @@ export interface AppNotification {
   companyId: string;
   title: string;
   message: string;
-  type: 'sale' | 'stock' | 'purchase' | 'spending' | 'goal' | 'announcement' | 'task' | 'customer';
+  type: 'sale' | 'stock' | 'purchase' | 'spending' | 'goal' | 'announcement' | 'task' | 'customer' | 'advertisement';
   isRead: boolean;
   createdAt: string;
   linkView?: string;

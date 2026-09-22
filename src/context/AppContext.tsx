@@ -4,7 +4,7 @@ import {
   Company, User, Product, Customer, Sale, Purchase, ComingSoonProduct,
   BusinessExpense, AdminSpending, FinancialTransaction, InventoryTransaction,
   Goal, BusinessPlan, Task, ChatMessage, AdminAnnouncement, AppNotification, ActivityLog,
-  UserPermission, StockStatus, SaleItem, UserRole, GoalStatus
+  UserPermission, StockStatus, SaleItem, UserRole, GoalStatus, CompanyMember, CompanyActionRequest, CompanyUserAlert
 } from '../types';
 import { api, getApiToken } from '../utils/api';
 import {
@@ -31,6 +31,8 @@ interface AppContextType {
   updateUserRole: (userId: string, role: UserRole) => void;
   updateCurrentUserProfile: (name: string, avatarUrl: string) => Promise<void>;
   createInviteLink: (companyId?: string) => Promise<string>;
+  companyAlerts: CompanyUserAlert[];
+  markCompanyAlertRead: (id: string) => Promise<void>;
 
   // Financial Stats (calculated dynamically from transactions)
   finances: {
@@ -153,6 +155,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedReceipt, setSelectedReceipt] = useState<Sale | null>(null);
   const hydratedRef = React.useRef(false);
   const syncTimerRef = React.useRef<number | null>(null);
+  const [companyAlerts, setCompanyAlerts] = useState<CompanyUserAlert[]>([]);
 
   // Hydrate shared state from the online account. Local storage remains a fallback.
   useEffect(() => {
@@ -234,6 +237,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const found = state.users.find(u => u.id === state.activeUserId);
     return found || state.users[0] || { id:'', name:'User', email:'', avatarUrl:'', role:'Member' as UserRole, permissions:{}, companyIds:[] };
   }, [state.users, state.activeUserId]);
+
+  useEffect(() => {
+    if (!currentCompany.id || !getApiToken()) { setCompanyAlerts([]); return; }
+    let alive = true;
+    const load = () => api(`/api/company/alerts?companyId=${encodeURIComponent(currentCompany.id)}`)
+      .then(data => { if (alive) setCompanyAlerts(data.alerts || []); })
+      .catch(() => { if (alive) setCompanyAlerts([]); });
+    load();
+    const timer = window.setInterval(load, 10000);
+    return () => { alive = false; window.clearInterval(timer); };
+  }, [currentCompany.id]);
 
   const currency = currentCompany.currency || 'MAD';
 
@@ -1673,6 +1687,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   }, []);
 
+  const markCompanyAlertRead = useCallback(async (id: string) => {
+    try { await api('/api/company/alert/read', {method:'POST', body:JSON.stringify({alertId:id})}); } catch {}
+    setCompanyAlerts(prev => prev.map(a => a.id === id ? {...a, isRead:true} : a));
+  }, []);
+
   // 13. RESET DATABASE
   const resetDatabase = useCallback(() => {
     const def = resetStateToDefaults();
@@ -1694,7 +1713,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     switchUser,
     updateUserPermissions,
     updateUserRole,
-    updateCurrentUserProfile, createInviteLink,
+    updateCurrentUserProfile, createInviteLink, companyAlerts, markCompanyAlertRead,
     finances,
     createSale,
     returnSale,

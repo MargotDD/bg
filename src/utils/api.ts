@@ -211,7 +211,7 @@ export async function api(path:string, options:RequestInit={}) {
         })
       });
     }
-    const rawResult = await rpc('create_company_invite', {p_company_id:company.id, p_company, p_company_state:await extractCompanyStateFromStored(company.id)});
+    const rawResult = await rpc('create_company_invite', {p_company_id:company.id, p_company:company, p_company_state:await extractCompanyStateFromStored(company.id)});
     const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
     if (!result?.code) throw new Error('Supabase did not return a valid invitation code. Apply the latest supabase/schema.sql.');
     return {code:result.code,link:`${window.location.origin}/?invite=${result.code}`,expiresAt:result.expires_at};
@@ -225,6 +225,61 @@ export async function api(path:string, options:RequestInit={}) {
     const rawResult = await rpc('accept_company_invite', {p_token:inviteMatch[1]});
     const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
     return {ok:true,state:result?.state};
+  }
+  if (path.startsWith('/api/company/members') && method === 'GET') {
+    const cid = new URLSearchParams(path.split('?')[1] || '').get('companyId') || '';
+    if (!cid) throw new Error('Company id is required.');
+    const result = await rpc('get_company_members', {p_company_id: cid});
+    const rows = Array.isArray(result) ? result[0] : result;
+    return {members: rows || []};
+  }
+  if (path === '/api/company/member/update' && method === 'POST') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('update_company_member', {
+      p_company_id: body.companyId, p_user_id: body.userId, p_role: body.role || 'Member',
+      p_custom_role: body.customRole || '', p_rank: Number(body.rank || 0),
+      p_fake_admin: !!body.fakeAdmin, p_permissions: body.permissions || {}
+    });
+    return Array.isArray(result) ? result[0] : result;
+  }
+  if (path === '/api/company/member/remove-request' && method === 'POST') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('request_company_member_removal', {p_company_id:body.companyId,p_user_id:body.userId,p_reason:body.reason || ''});
+    return Array.isArray(result) ? result[0] : result;
+  }
+  if (path === '/api/company/remove-request/resolve' && method === 'POST') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('resolve_company_member_removal', {p_request_id:body.requestId,p_approve:!!body.approve});
+    return Array.isArray(result) ? result[0] : result;
+  }
+  if (path.startsWith('/api/company/remove-requests') && method === 'GET') {
+    const cid = new URLSearchParams(path.split('?')[1] || '').get('companyId') || '';
+    if (!cid) throw new Error('Company id is required.');
+    const result = await rpc('get_company_action_requests', {p_company_id:cid});
+    const rows = Array.isArray(result) ? result[0] : result;
+    return {requests:rows || []};
+  }
+  if (path === '/api/company/profile' && method === 'PUT') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('update_company_profile', {p_company_id:body.companyId,p_name:body.name,p_description:body.description,p_logo_url:body.logoUrl || ''});
+    return {company:Array.isArray(result) ? result[0] : result};
+  }
+  if (path === '/api/company/alert' && method === 'POST') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('create_company_user_alert', {p_company_id:body.companyId,p_target_user_id:body.userId,p_title:body.title,p_message:body.message});
+    return Array.isArray(result) ? result[0] : result;
+  }
+  if (path.startsWith('/api/company/alerts') && method === 'GET') {
+    const cid = new URLSearchParams(path.split('?')[1] || '').get('companyId') || '';
+    if (!cid) throw new Error('Company id is required.');
+    const result = await rpc('get_my_company_alerts', {p_company_id:cid});
+    const rows = Array.isArray(result) ? result[0] : result;
+    return {alerts:rows || []};
+  }
+  if (path === '/api/company/alert/read' && method === 'POST') {
+    const body = JSON.parse(String(options.body || '{}'));
+    const result = await rpc('mark_company_alert_read', {p_alert_id:body.alertId});
+    return Array.isArray(result) ? result[0] : result;
   }
   throw new Error(`Unsupported API endpoint: ${path}`);
 }

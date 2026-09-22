@@ -8,11 +8,13 @@ interface NotificationsModalProps {
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose }) => {
-  const { state, currentCompany, markNotificationAsRead, markAllNotificationsAsRead, setActiveView } = useApp();
+  const { state, currentCompany, markNotificationAsRead, markAllNotificationsAsRead, setActiveView, companyAlerts, markCompanyAlertRead } = useApp();
 
   if (!isOpen) return null;
 
-  const notifications = state.notifications.filter(n => n.companyId === currentCompany.id);
+  const regularNotifications = state.notifications.filter(n => n.companyId === currentCompany.id);
+  const warningNotifications = companyAlerts.map(a => ({id:a.id, companyId:a.companyId, title:a.title, message:a.message, type:'advertisement' as const, isRead:a.isRead, createdAt:a.createdAt}));
+  const notifications = [...regularNotifications, ...warningNotifications].sort((a,b)=>new Date(b.createdAt).getTime()-new Date(a.createdAt).getTime());
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -21,6 +23,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, 
       case 'spending': return CreditCard;
       case 'announcement': return Megaphone;
       case 'goal': return Target;
+      case 'advertisement': return AlertTriangle;
       default: return Bell;
     }
   };
@@ -65,7 +68,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, 
                 <div
                   key={notif.id}
                   onClick={() => {
-                    markNotificationAsRead(notif.id);
+                    if (notif.type === 'advertisement') markCompanyAlertRead(notif.id); else markNotificationAsRead(notif.id);
                     if (notif.linkView) {
                       setActiveView(notif.linkView);
                       onClose();
@@ -76,17 +79,17 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, 
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-xl mt-0.5 ${!notif.isRead ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700'}`}>
+                    <div className={`p-2 rounded-xl mt-0.5 ${notif.type === 'advertisement' ? 'bg-red-500 text-white' : (!notif.isRead ? 'bg-rose-500 text-white' : 'bg-rose-100 text-rose-700')}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-stone-900">{notif.title}</span>
+                        <span className={`text-xs font-bold ${notif.type === 'advertisement' ? 'text-red-700' : 'text-stone-900'}`}>{notif.title}</span>
                         <span className="text-[10px] text-stone-400">
                           {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      <p className="text-xs text-stone-600 mt-0.5">{notif.message}</p>
+                      <p className={`text-xs mt-0.5 ${notif.type === 'advertisement' ? 'text-red-700 font-semibold' : 'text-stone-600'}`}>{notif.message}</p>
                       {notif.linkView && (
                         <div className="mt-1.5 flex items-center gap-1 text-[10px] font-bold text-rose-600 hover:underline">
                           <span>View Section</span>

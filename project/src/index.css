@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: #FCECEF;
+    background-image: 
+      radial-gradient(#F7CCD6 1.2px, transparent 1.2px),
+      radial-gradient(#F9D9E1 1px, transparent 1px);
+    background-size: 28px 28px, 14px 14px;
+    background-position: 0 0, 14px 14px;
+    color: #4A2B33;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: #3E2027;
+  }
+}
+
+/* Kawaii squircle card aesthetic matching the Atelier Rose & Glow theme */
+.kawaii-card {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
+  border: 1.5px solid #F9D5DF;
+  border-radius: 1.75rem;
+  box-shadow: 0 8px 30px rgba(226, 115, 135, 0.08);
+}
+
+.kawaii-pill-button {
+  background: linear-gradient(135deg, #E87A90 0%, #DC657C 100%);
+  color: white;
+  border-radius: 9999px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(226, 115, 135, 0.25);
+  transition: all 0.2s ease;
+}
+
+.kawaii-pill-button:hover {
+  background: linear-gradient(135deg, #DF6D84 0%, #CF576F 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(226, 115, 135, 0.32);
+}
+
+.kawaii-squircle-icon {
+  border-radius: 1.15rem;
+  background: #FFE8EE;
+  border: 1px solid #F8C8D4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom scrollbars for cozy pastel experience */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(226, 115, 135, 0.28);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(226, 115, 135, 0.48);
+}
+
+

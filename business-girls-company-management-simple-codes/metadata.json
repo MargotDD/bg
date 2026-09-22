@@ -1,0 +1,6 @@
+{
+  "name": "Business Girls",
+  "description": "Cross-platform business management application with workspace isolation, POS, inventory, weighted cost, admin spending, finances, goals, and team collaboration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
